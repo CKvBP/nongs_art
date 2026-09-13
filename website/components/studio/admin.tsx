@@ -803,6 +803,13 @@ export function AdminStudio({
                     <div>
                       <p className="eyebrow">{art.category}</p>
                       <h3>{art.title}</h3>
+                      {art.hero && art.hero !== "none" && (
+                        <p className="form-hint">
+                          Hero ·{" "}
+                          {art.hero === "main" ? "large image" : "small image"}
+                          {!art.published ? " (hidden)" : ""}
+                        </p>
+                      )}
                       <div className="admin-card-actions">
                         <button
                           className="text-link"

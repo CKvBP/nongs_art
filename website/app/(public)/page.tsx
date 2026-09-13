@@ -4,6 +4,8 @@ import { useStudio } from "@/components/studio/provider";
 import { ArrowUpRight, ArrowRight } from "lucide-react";
 export default function Home() {
   const { data } = useStudio();
+  const mainHero = data.artworks.find((art) => art.hero === "main");
+  const accentHero = data.artworks.find((art) => art.hero === "accent");
   return (
     <>
       <main id="main-content">
@@ -35,15 +37,23 @@ export default function Home() {
             <div className="art-caption">FROM NONG’S EASEL, WITH LOVE</div>
             <img
               className="hero-painting"
-              src="/art/floral.webp"
-              alt="Nong’s acrylic painting of white flowers and green leaves"
+              src={mainHero?.image ?? "/art/floral.webp"}
+              alt={
+                mainHero?.title ??
+                "Nong’s acrylic painting of white flowers and green leaves"
+              }
             />
             <div className="sketch-frame">
               <img
-                src="/art/cat-sketch.webp"
-                alt="Nong’s expressive ink and watercolor cat sketch"
+                src={accentHero?.image ?? "/art/cat-sketch.webp"}
+                alt={
+                  accentHero?.title ??
+                  "Nong’s expressive ink and watercolor cat sketch"
+                }
               />
-              <span>Little lines, big personality.</span>
+              <span>
+                {accentHero?.title ?? "Little lines, big personality."}
+              </span>
             </div>
             <div className="art-seal">
               a little

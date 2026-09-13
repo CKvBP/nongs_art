@@ -207,3 +207,30 @@ test("booking history cannot be orphaned by deleting its class or offering", () 
     /has inquiries/,
   );
 });
+
+test("hero assignments replace only their own position and hidden art stays private", () => {
+  const data = studio();
+  const [first, second, third] = data.artworks;
+  adminMutation(data, "artwork", { ...first, hero: "main" });
+  adminMutation(data, "artwork", { ...second, hero: "accent" });
+  adminMutation(data, "artwork", { ...third, hero: "main" });
+  assert.equal(data.artworks.find((a) => a.id === first.id)?.hero, "none");
+  assert.equal(data.artworks.find((a) => a.id === second.id)?.hero, "accent");
+  assert.equal(
+    publicStudio(data).artworks.find((a) => a.hero === "main")?.id,
+    third.id,
+  );
+  adminMutation(data, "artwork", { ...third, hero: "main", published: false });
+  assert.equal(
+    publicStudio(data).artworks.find((a) => a.hero === "main"),
+    undefined,
+  );
+  adminMutation(data, "artwork", { ...second, hero: "none" });
+  assert.equal(
+    publicStudio(data).artworks.find((a) => a.hero === "accent"),
+    undefined,
+  );
+  assert.throws(() =>
+    adminMutation(data, "artwork", { ...first, hero: "invalid" }),
+  );
+});

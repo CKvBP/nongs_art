@@ -20,6 +20,7 @@ export type EditorValue = {
   programId?: string;
   sessions?: StudioEvent["sessions"];
   featured?: boolean;
+  hero?: "none" | "main" | "accent";
   startingPrice?: number;
   date?: string;
   reason?: string;
@@ -239,6 +240,7 @@ export function ItemEditor({
         description: value("description"),
         image,
         featured: form.has("featured"),
+        hero: value("hero"),
         published: form.has("published"),
       };
     if (kind === "offering")
@@ -574,6 +576,22 @@ export function ItemEditor({
               defaultChecked={item.published ?? true}
             />
             <span>Visible on the website</span>
+          </label>
+        )}
+        {kind === "artwork" && (
+          <label>
+            Hero image
+            <select name="hero" defaultValue={item.hero ?? "none"}>
+              <option value="none">Not a hero image</option>
+              <option value="main">Hero · large image</option>
+              <option value="accent">Hero · small overlapping image</option>
+            </select>
+            <small>
+              Choose where this artwork appears at the top of the homepage.
+              Saving replaces the previous image in that position. Keep it
+              visible on the website to display it. An unassigned position uses
+              the original studio image.
+            </small>
           </label>
         )}
         {kind === "artwork" && (

@@ -55,6 +55,7 @@ export const artworkSchema = z.object({
   description: z.string().trim().max(3000),
   image,
   featured: z.boolean(),
+  hero: z.enum(["none", "main", "accent"]).optional(),
   published: z.boolean(),
 });
 export const offeringSchema = z.object({

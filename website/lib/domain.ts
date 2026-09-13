@@ -187,9 +187,17 @@ export function adminMutation(data: StudioData, action: string, raw: unknown) {
       upsert(data.events, event);
       break;
     }
-    case "artwork":
-      upsert(data.artworks, artworkSchema.parse(raw));
+    case "artwork": {
+      const artwork = artworkSchema.parse(raw);
+      if (artwork.hero && artwork.hero !== "none") {
+        for (const other of data.artworks) {
+          if (other.id !== artwork.id && other.hero === artwork.hero)
+            other.hero = "none";
+        }
+      }
+      upsert(data.artworks, artwork);
       break;
+    }
     case "offering":
       upsert(data.offerings, offeringSchema.parse(raw));
       break;

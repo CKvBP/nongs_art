@@ -42,6 +42,10 @@ The app automatically creates its `studio_state` table on the first database req
 
 Session cookies are signed, HttpOnly, SameSite=Lax, secure in production, and expire after eight hours. Mutating routes check the request origin; admin routes and image uploads require authentication. Sign-in attempts are rate-limited in persistent storage. Missing credentials keep production admin access closed. Neon and Blob must be connected and verified in the target Vercel environment before going live.
 
+## Homepage hero images
+
+In **Admin → Gallery**, edit or add a piece and choose **Hero image → large image** or **small overlapping image**. Save the piece with **Visible on the website** checked. Each position has one assignment; a new selection replaces the previous one. Unassigned or hidden selections fall back to the original floral/cat images. This is separate from the four featured gallery pieces below the hero.
+
 ## Customer reference photos
 
 Ornament and scribble request pages accept up to three optional reference photos. Customers can preview/remove photos before submitting. JPG, PNG, and WebP originals up to 30 MB are resized in the browser; the server validates and re-encodes them, removing metadata. Prepared uploads are limited to 800 KB each, with the complete request below Vercel’s body limit.

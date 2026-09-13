@@ -159,30 +159,111 @@ try {
       .status,
     409,
   );
-  const photo = await sharp({ create: { width: 20, height: 20, channels: 3, background: "#354938" } }).png().toBuffer();
+  const photo = await sharp({
+    create: { width: 20, height: 20, channels: 3, background: "#354938" },
+  })
+    .png()
+    .toBuffer();
   const artworkRequest = {
-    ...request, requestId: randomUUID(), date: "",
-    offeringId: data.offerings.find(o => o.category === "ornament").id,
-    photos: [{ name: "my-pet.png", data: "data:image/png;base64," + photo.toString("base64") }],
+    ...request,
+    requestId: randomUUID(),
+    date: "",
+    offeringId: data.offerings.find((o) => o.category === "ornament").id,
+    photos: [
+      {
+        name: "my-pet.png",
+        data: "data:image/png;base64," + photo.toString("base64"),
+      },
+    ],
   };
   assert.equal((await post("/api/inquiries", artworkRequest)).status, 201);
-  const updated = await (await fetch(base + "/api/admin", { headers: { cookie } })).json();
-  const attached = updated.inquiries.find(i => i.id === artworkRequest.requestId).photos;
+  const updated = await (
+    await fetch(base + "/api/admin", { headers: { cookie } })
+  ).json();
+  const attached = updated.inquiries.find(
+    (i) => i.id === artworkRequest.requestId,
+  ).photos;
   assert.equal(attached.length, 1);
   const imagePath = "/api/references/" + attached[0].id;
-  assert.equal((await fetch(base + imagePath)).status, 401, "Reference photos require admin sign-in");
+  assert.equal(
+    (await fetch(base + imagePath)).status,
+    401,
+    "Reference photos require admin sign-in",
+  );
   const image = await fetch(base + imagePath, { headers: { cookie } });
   assert.equal(image.status, 200);
   assert.equal(image.headers.get("content-type"), "image/webp");
   assert.equal(image.headers.get("cache-control"), "private, no-store");
-  assert.equal((await sharp(Buffer.from(await image.arrayBuffer())).metadata()).format, "webp");
+  assert.equal(
+    (await sharp(Buffer.from(await image.arrayBuffer())).metadata()).format,
+    "webp",
+  );
   assert.equal((await post("/api/inquiries", artworkRequest)).status, 201);
-  assert.equal((await readdir(path.join(directory, "references"))).length, 1, "Retries do not duplicate uploaded files");
-  assert.equal((await post("/api/inquiries", { ...artworkRequest, requestId: randomUUID(), photos: Array(4).fill(artworkRequest.photos[0]) })).status, 400);
-  assert.equal((await post("/api/inquiries", { ...artworkRequest, requestId: randomUUID(), photos: [{ name: "fake.png", data: "data:image/png;base64,bm90IGFuIGltYWdl" }] })).status, 400);
-  const visible = JSON.stringify(await (await fetch(base + "/api/studio")).json());
-  assert.ok(!visible.includes(attached[0].id), "Reference photo identifiers are private");
-  assert.equal((await fetch(base + "/references/" + attached[0].id + ".webp")).status, 404);
+  assert.equal(
+    (await readdir(path.join(directory, "references"))).length,
+    1,
+    "Retries do not duplicate uploaded files",
+  );
+  assert.equal(
+    (
+      await post("/api/inquiries", {
+        ...artworkRequest,
+        requestId: randomUUID(),
+        photos: Array(4).fill(artworkRequest.photos[0]),
+      })
+    ).status,
+    400,
+  );
+  assert.equal(
+    (
+      await post("/api/inquiries", {
+        ...artworkRequest,
+        requestId: randomUUID(),
+        photos: [
+          { name: "fake.png", data: "data:image/png;base64,bm90IGFuIGltYWdl" },
+        ],
+      })
+    ).status,
+    400,
+  );
+  const visible = JSON.stringify(
+    await (await fetch(base + "/api/studio")).json(),
+  );
+  assert.ok(
+    !visible.includes(attached[0].id),
+    "Reference photo identifiers are private",
+  );
+  assert.equal(
+    (await fetch(base + "/references/" + attached[0].id + ".webp")).status,
+    404,
+  );
+  const heroState = await (
+    await fetch(base + "/api/admin", { headers: { cookie } })
+  ).json();
+  const heroArt = {
+    ...heroState.artworks[2],
+    hero: "main",
+    title: "Hero selection check",
+  };
+  assert.equal(
+    (
+      await post(
+        "/api/admin",
+        { action: "artwork", payload: heroArt, revision: heroState.revision },
+        true,
+      )
+    ).status,
+    200,
+  );
+  const home = await (await fetch(base + "/")).text();
+  assert.ok(
+    home.includes(
+      'class="hero-painting" src="' +
+        heroArt.image +
+        '" alt="Hero selection check"',
+    ),
+    "Homepage renders the assigned hero artwork",
+  );
   for (const route of [
     "/",
     "/classes",
