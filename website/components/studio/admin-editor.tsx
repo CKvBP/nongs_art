@@ -28,7 +28,11 @@ export type EditorValue = {
   date?: string;
   reason?: string;
 };
-export type EditorState = { kind: EditorKind; item?: EditorValue };
+export type EditorState = {
+  kind: EditorKind;
+  item?: EditorValue;
+  scheduleAfterSave?: EditorValue;
+};
 export function ImageChooser({
   value,
   onChange,
@@ -138,6 +142,8 @@ export function ItemEditor({
   data,
   save,
   onClose,
+  onCreateProgram,
+  onProgramCreated,
   error,
 }: {
   editor: EditorState;
@@ -145,12 +151,22 @@ export function ItemEditor({
   error: string;
   save: (action: string, payload: unknown) => Promise<boolean>;
   onClose: () => void;
+  onCreateProgram: (draft: EditorValue) => void;
+  onProgramCreated: (programId: string) => void;
 }) {
   const { kind, item = {} } = editor;
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [image, setImage] = useState(
-    item.image ?? data.artworks[0]?.image ?? "/art/floral.webp",
+    item.image ??
+      (kind === "event"
+        ? (
+            data.programs.find((p) => p.id === item.programId) ??
+            data.programs[0]
+          )?.image
+        : undefined) ??
+      data.artworks[0]?.image ??
+      "/art/floral.webp",
   );
   const firstProgram =
     data.programs.find((p) => p.id === item.programId) ?? data.programs[0];
@@ -173,12 +189,17 @@ export function ItemEditor({
       },
     ],
   );
+  const [description, setDescription] = useState(
+    item.description ?? firstProgram?.description ?? "",
+  );
   const [formError, setFormError] = useState("");
   function chooseProgram(value: string) {
     setProgramId(value);
     const program = data.programs.find((p) => p.id === value);
     if (program) {
       setTitle(program.title);
+      setImage(program.image);
+      setDescription(program.description);
       setPrice(program.price);
       setCapacity(program.capacity);
     }
@@ -208,6 +229,8 @@ export function ItemEditor({
         ...base,
         title,
         programId,
+        image,
+        description,
         price,
         capacity,
         sessions: sessions.map((s, i) => ({
@@ -241,8 +264,11 @@ export function ItemEditor({
     if (kind === "block")
       payload = { ...base, date: value("date"), reason: value("reason") };
     try {
-      if (await save(kind, payload)) onClose();
-      else
+      if (await save(kind, payload)) {
+        if (kind === "program" && editor.scheduleAfterSave)
+          onProgramCreated(base.id);
+        else onClose();
+      } else
         setFormError(
           "Your changes haven’t been saved. Review the message above and try again.",
         );
@@ -279,8 +305,41 @@ export function ItemEditor({
                 ))}
               </select>
             </label>
+            <button
+              type="button"
+              className="text-link"
+              disabled={busy || uploading}
+              onClick={() =>
+                onCreateProgram({
+                  ...item,
+                  title,
+                  image,
+                  description,
+                  price,
+                  capacity,
+                  sessions,
+                })
+              }
+            >
+              Create a new program
+            </button>
+            <ImageChooser
+              value={image}
+              onChange={setImage}
+              data={data}
+              onBusy={setUploading}
+            />
             <label>
-              Class title
+              About this week’s painting
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                maxLength={3000}
+                rows={4}
+              />
+            </label>
+            <label>
+              Painting / class title
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -559,7 +618,7 @@ export function ItemEditor({
             <input
               type="checkbox"
               name="published"
-              defaultChecked={item.published ?? true}
+              defaultChecked={item.published ?? kind !== "event"}
             />
             <span>Visible on the website</span>
           </label>

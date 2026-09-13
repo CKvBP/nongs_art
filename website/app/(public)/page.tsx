@@ -1,9 +1,19 @@
 "use client";
 import Link from "next/link";
+import { dateLabel, moneyLabel, sortedSessions, studioNow } from "@/lib/model";
 import { useStudio } from "@/components/studio/provider";
 import { ArrowUpRight, ArrowRight } from "lucide-react";
 export default function Home() {
   const { data } = useStudio();
+  const upcoming = data.events
+    .filter((event) => {
+      const first = sortedSessions(event)[0];
+      return first && `${first.date}T${first.start}` > studioNow();
+    })
+    .sort((a, b) =>
+      sortedSessions(a)[0].date.localeCompare(sortedSessions(b)[0].date),
+    )
+    .slice(0, 3);
   const mainHero = data.artworks.find((art) => art.hero === "main");
   const accentHero = data.artworks.find((art) => art.hero === "accent");
   return (
@@ -145,6 +155,47 @@ export default function Home() {
             </div>
           </div>
         </section>
+        {upcoming.length > 0 && (
+          <section className="wrap page-space">
+            <p className="eyebrow">COMING UP IN THE STUDIO</p>
+            <h2>What we’re painting next</h2>
+            <div className="classes-grid">
+              {upcoming.map((event) => {
+                const program = data.programs.find(
+                  (p) => p.id === event.programId,
+                );
+                return (
+                  <article className="class-card" key={event.id}>
+                    <Link className="class-card-image" href={`/classes/${event.id}`}>
+                      <img
+                        src={event.image ?? program?.image}
+                        alt={event.title}
+                      />
+                    </Link>
+                    <div className="class-card-content">
+                      <p className="eyebrow">{program?.title}</p>
+                      <h3>{event.title}</h3>
+                      <p>
+                        {sortedSessions(event)
+                          .map((s) => dateLabel(s.date))
+                          .join(" & ")}
+                      </p>
+                      <p>
+                        {moneyLabel(event.price)} ·{" "}
+                        {event.seatsRemaining > 0
+                          ? `${event.seatsRemaining} places left`
+                          : "Fully booked"}
+                      </p>
+                      <Link className="text-link" href={`/classes/${event.id}`}>
+                        View class <ArrowUpRight size={16} />
+                      </Link>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        )}
         <section id="about" className="about wrap">
           <div className="about-image">
             <img

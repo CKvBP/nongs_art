@@ -234,3 +234,32 @@ test("hero assignments replace only their own position and hidden art stays priv
     adminMutation(data, "artwork", { ...first, hero: "invalid" }),
   );
 });
+
+test("weekly painting details persist independently of program defaults and drafts stay private", () => {
+  const data = studio();
+  const original = data.events[0];
+  const program = data.programs.find((p) => p.id === original.programId)!;
+  const registration = reserveClass(data, booking(original.id));
+  adminMutation(data, "event", {
+    ...original,
+    image: "/art/floral.webp",
+    description: "Paint sunflowers this week.",
+    title: "Sunflower Week",
+    published: true,
+  });
+  adminMutation(data, "program", {
+    ...program,
+    description: "New default description",
+    image: "/art/studio-art.webp",
+  });
+  const visible = publicStudio(data).events.find((e) => e.id === original.id)!;
+  assert.equal(visible.description, "Paint sunflowers this week.");
+  assert.equal(visible.image, "/art/floral.webp");
+  assert.equal(visible.seatsRemaining, original.capacity - 1);
+  assert.equal(data.registrations[0].reference, registration.reference);
+  adminMutation(data, "event", { ...visible, published: false });
+  assert.equal(
+    publicStudio(data).events.some((e) => e.id === original.id),
+    false,
+  );
+});

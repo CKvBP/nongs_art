@@ -55,15 +55,15 @@ const navigation = [
   { id: "inquiries", title: "Inquiries", icon: MessageSquare },
   { id: "registrations", title: "Registrations", icon: Users },
   { id: "overview", title: "Overview", icon: LayoutDashboard },
-  { id: "calendar", title: "Calendar", icon: CalendarDays },
-  { id: "programs", title: "Programs", icon: Palette },
+  { id: "calendar", title: "Classes & Events", icon: CalendarDays },
   { id: "gallery", title: "Gallery", icon: Images },
   { id: "offerings", title: "Custom offerings", icon: Heart },
   { id: "settings", title: "Studio settings", icon: Settings2 },
 ];
 const captions: Record<string, string> = {
   overview: "A little overview of your creative world.",
-  calendar: "Make space for classes, special days, and time for yourself.",
+  calendar:
+    "Plan each painting week, manage program defaults, and make room for special days.",
   programs: "The creative experiences that make your studio yours.",
   registrations: "A place for every artist. A simple view of every booking.",
   inquiries: "New stories, special requests, and dates to remember.",
@@ -85,6 +85,10 @@ export function AdminStudio({
   section?: string;
   preview: boolean;
 }) {
+  const [classView, setClassView] = useState(
+    section === "programs" ? "programs" : "calendar",
+  );
+  const isClasses = section === "calendar" || section === "programs";
   const [data, setData] = useState(initial);
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [error, setError] = useState("");
@@ -150,7 +154,7 @@ export function AdminStudio({
     }
   }
   const addAction =
-    section === "programs"
+    isClasses && classView === "programs"
       ? { label: "New program", kind: "program" as const }
       : section === "gallery"
         ? { label: "Add artwork", kind: "artwork" as const }
@@ -222,7 +226,11 @@ export function AdminStudio({
         <header className="admin-topbar">
           <span>
             Studio /{" "}
-            <strong>{navigation.find((n) => n.id === section)?.title}</strong>
+            <strong>
+              {isClasses
+                ? "Classes & Events"
+                : navigation.find((n) => n.id === section)?.title}
+            </strong>
           </span>
           <div>
             <span
@@ -256,6 +264,8 @@ export function AdminStudio({
                   <>
                     Hello, Nong<span className="greeting-dot">.</span>
                   </>
+                ) : isClasses ? (
+                  "Classes & Events"
                 ) : (
                   navigation.find((n) => n.id === section)?.title
                 )}
@@ -483,14 +493,115 @@ export function AdminStudio({
               </div>
             </>
           )}
-          {section === "calendar" && (
+          {isClasses && (
+            <div
+              className="table-toolbar"
+              aria-label="Classes and events views"
+            >
+              {[
+                ["calendar", "Calendar"],
+                ["list", "Scheduled classes"],
+                ["programs", "Programs & defaults"],
+              ].map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={`button small ${classView === id ? "dark" : ""}`}
+                  aria-pressed={classView === id}
+                  onClick={() => setClassView(id)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+          {isClasses && classView === "list" && (
+            <div className="admin-grid">
+              {[...data.events]
+                .sort((a, b) =>
+                  (a.sessions[0]?.date ?? "").localeCompare(
+                    b.sessions[0]?.date ?? "",
+                  ),
+                )
+                .map((event) => {
+                  const program = data.programs.find(
+                    (p) => p.id === event.programId,
+                  );
+                  return (
+                    <article className="admin-content-card" key={event.id}>
+                      <div className="admin-card-photo">
+                        <img
+                          src={event.image ?? program?.image}
+                          alt={event.title}
+                        />
+                      </div>
+                      <div className="admin-card-body">
+                        <p className="eyebrow">
+                          {program?.title} ·{" "}
+                          {event.published ? "Published" : "Draft"}
+                        </p>
+                        <h3>{event.title}</h3>
+                        <p>{event.description || program?.description}</p>
+                        <p>
+                          {event.sessions
+                            .map(
+                              (s) =>
+                                `${dateLabel(s.date)} · ${timeLabel(s.start)}–${timeLabel(s.end)}`,
+                            )
+                            .join(" / ")}
+                        </p>
+                        <p>
+                          {seats(data, event.id)}/{event.capacity} places
+                          reserved · {moneyLabel(event.price)}
+                        </p>
+                        <div className="admin-card-actions">
+                          <button
+                            className="text-link"
+                            onClick={() =>
+                              setEditor({ kind: "event", item: event })
+                            }
+                          >
+                            Edit class
+                          </button>
+                          <button
+                            className="text-link"
+                            onClick={() =>
+                              setEditor({
+                                kind: "event",
+                                item: {
+                                  ...event,
+                                  id: undefined,
+                                  published: false,
+                                  sessions: event.sessions.map((s) => ({
+                                    ...s,
+                                    date: "",
+                                  })),
+                                },
+                              })
+                            }
+                          >
+                            Duplicate week
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              {!data.events.length && (
+                <EmptyState title="Plan your first painting week.">
+                  Add a class to choose a program, painting, and dates.
+                </EmptyState>
+              )}
+            </div>
+          )}
+          {isClasses && classView === "calendar" && (
             <AdminCalendar
               data={data}
               setEditor={setEditor}
               remove={setDeleting}
             />
           )}
-          {section === "programs" && (
+          {isClasses && classView === "programs" && (
             <>
               <div className="admin-grid">
                 {data.programs.map((program) => (
@@ -529,6 +640,17 @@ export function AdminStudio({
                         >
                           <Pencil size={14} />
                           Edit program
+                        </button>
+                        <button
+                          className="text-link"
+                          onClick={() =>
+                            setEditor({
+                              kind: "event",
+                              item: { programId: program.id },
+                            })
+                          }
+                        >
+                          Add dates
                         </button>
                         <div>
                           <button
@@ -1016,7 +1138,17 @@ export function AdminStudio({
       </div>
       {editor && (
         <ItemEditor
+          key={`${editor.kind}:${editor.item?.id ?? "new"}`}
           editor={editor}
+          onCreateProgram={(draft) =>
+            setEditor({ kind: "program", scheduleAfterSave: draft })
+          }
+          onProgramCreated={(programId) =>
+            setEditor({
+              kind: "event",
+              item: { ...editor.scheduleAfterSave, programId },
+            })
+          }
           data={data}
           save={save}
           error={error}
@@ -1233,6 +1365,25 @@ function AdminCalendar({
       <section className="admin-panel day-agenda">
         <div className="panel-heading">
           <h2>{dateLabel(selected, { weekday: "long", month: "long" })}</h2>
+          <button
+            className="text-link"
+            onClick={() =>
+              setEditor({ kind: "event", item: { date: selected } })
+            }
+          >
+            Add class
+          </button>
+          <button
+            className="text-link"
+            onClick={() =>
+              setEditor({
+                kind: "program",
+                scheduleAfterSave: { date: selected },
+              })
+            }
+          >
+            New program & dates
+          </button>
           <button
             className="text-link"
             onClick={() =>

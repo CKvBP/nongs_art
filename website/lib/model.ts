@@ -41,6 +41,8 @@ export const sessionSchema = z
   .refine((s) => s.end > s.start, "End time must be after start time.");
 export const eventSchema = z.object({
   id,
+  image: image.optional(),
+  description: z.string().trim().max(3000).optional(),
   programId: id,
   title: text,
   price: money,

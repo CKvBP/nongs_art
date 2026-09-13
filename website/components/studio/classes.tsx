@@ -122,7 +122,7 @@ export function Classes({ initialType = "all" }: { initialType?: string }) {
                   href={`/classes/${event.id}`}
                   className="class-card-image"
                 >
-                  <img src={program.image} alt={program.title} />
+                  <img src={event.image ?? program.image} alt={event.title} />
                   <span className="image-chip">
                     {
                       categories.find(
@@ -150,7 +150,7 @@ export function Classes({ initialType = "all" }: { initialType?: string }) {
                   <h3>
                     <Link href={`/classes/${event.id}`}>{event.title}</Link>
                   </h3>
-                  <p>{program.durationNote}</p>
+                  <p>{event.description || program.durationNote}</p>
                   <div className="class-meta">
                     <span>
                       <Clock3 size={15} />
@@ -249,11 +249,15 @@ export function ClassDetails({ id }: { id: string }) {
       <BackLink href="/classes">All classes & workshops</BackLink>
       <div className="detail-layout">
         <div>
-          <img className="detail-art" src={program.image} alt={program.title} />
+          <img
+            className="detail-art"
+            src={event.image ?? program.image}
+            alt={event.title}
+          />
           <div className="detail-copy">
             <p className="eyebrow">A LITTLE CREATIVITY GOES A LONG WAY</p>
             <h1>{event.title}</h1>
-            <p>{program.description}</p>
+            <p>{event.description || program.description}</p>
             <div className="detail-features">
               <span>
                 <Check size={17} />
