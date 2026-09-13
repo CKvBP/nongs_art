@@ -1,10 +1,12 @@
 "use client";
 import Link from "next/link";
+import { defaultHomepage } from "@/lib/model";
 import { dateLabel, moneyLabel, sortedSessions, studioNow } from "@/lib/model";
 import { useStudio } from "@/components/studio/provider";
 import { ArrowUpRight, ArrowRight } from "lucide-react";
 export default function Home() {
   const { data } = useStudio();
+  const homepage = data.homepage ?? defaultHomepage;
   const upcoming = data.events
     .filter((event) => {
       const first = sortedSessions(event)[0];
@@ -77,48 +79,22 @@ export default function Home() {
         <section className="offerings wrap">
           <div className="section-heading">
             <div>
-              <p className="eyebrow">THERE’S A LITTLE SOMETHING FOR EVERYONE</p>
-              <h2>Find your kind of creative.</h2>
+              <p className="eyebrow">{homepage.eyebrow}</p>
+              <h2>{homepage.heading}</h2>
             </div>
-            <span className="handwritten">Let’s make something lovely.</span>
+            <span className="handwritten">{homepage.subtitle}</span>
           </div>
           <div className="offering-grid">
-            {[
-              {
-                n: "01",
-                title: "Little artists, big imaginations.",
-                text: "After-school art adventures, one creative week at a time.",
-                image: "kids",
-                link: "/classes?type=children",
-                cta: "Children’s art classes",
-                tag: "MAKE & EXPLORE",
-              },
-              {
-                n: "02",
-                title: "A night to paint & unwind.",
-                text: "Good company, a little color, drinks, and snacks.",
-                image: "moonlight",
-                link: "/classes?type=adult",
-                cta: "Adult paint nights",
-                tag: "SIP & CREATE",
-              },
-              {
-                n: "03",
-                title: "Your story, made into art.",
-                text: "Beloved pets, favorite places, and moments worth keeping.",
-                image: "pet-ornaments",
-                link: "/commissions",
-                cta: "Something just for you",
-                tag: "GIVE & KEEP",
-              },
-            ].map((o) => (
-              <Link href={o.link} className="offering-card" key={o.n}>
+            {homepage.cards.map((o, index) => (
+              <Link href={o.link} className="offering-card" key={index}>
                 <div className="card-image">
-                  <img src={"/art/" + o.image + ".webp"} alt={o.title} />
+                  <img src={o.image} alt={o.title} />
                   <span>{o.tag}</span>
                 </div>
                 <div className="card-copy">
-                  <p className="card-number">{o.n}</p>
+                  <p className="card-number">
+                    {String(index + 1).padStart(2, "0")}
+                  </p>
                   <h3>{o.title}</h3>
                   <p>{o.text}</p>
                   <div className="card-link">
@@ -166,7 +142,10 @@ export default function Home() {
                 );
                 return (
                   <article className="class-card" key={event.id}>
-                    <Link className="class-card-image" href={`/classes/${event.id}`}>
+                    <Link
+                      className="class-card-image"
+                      href={`/classes/${event.id}`}
+                    >
                       <img
                         src={event.image ?? program?.image}
                         alt={event.title}

@@ -12,6 +12,7 @@ export default async function Page({
       "programs",
       "registrations",
       "inquiries",
+      "homepage",
       "gallery",
       "offerings",
       "settings",

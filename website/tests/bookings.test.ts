@@ -301,3 +301,24 @@ test("registration deletion waits for an active email send", () => {
   adminMutation(data, "delete", { kind: "registration", id });
   assert.equal(data.registrations.length, 0);
 });
+
+test("homepage edits publish without changing offerings and reject unsafe links", () => {
+  const data = studio();
+  const original = publicStudio(data).homepage!;
+  const offerings = structuredClone(data.offerings);
+  const updated = structuredClone(original);
+  updated.heading = "Make art with Nong";
+  updated.cards[0].title = "A new painting every week";
+  updated.cards[0].image = "/art/floral.webp";
+  adminMutation(data, "homepage", updated);
+  assert.deepEqual(publicStudio(data).homepage, updated);
+  assert.deepEqual(data.offerings, offerings);
+  updated.cards[0].link = "javascript:alert(1)";
+  assert.throws(() => adminMutation(data, "homepage", updated));
+  updated.cards[0].link = "//example.com";
+  assert.throws(() => adminMutation(data, "homepage", updated));
+  assert.equal(
+    publicStudio(data).homepage!.cards[0].link,
+    original.cards[0].link,
+  );
+});

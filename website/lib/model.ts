@@ -69,6 +69,64 @@ export const offeringSchema = z.object({
   startingPrice: money,
   published: z.boolean(),
 });
+export const homepageSchema = z.object({
+  eyebrow: text,
+  heading: text,
+  subtitle: text,
+  cards: z
+    .array(
+      z.object({
+        title: text,
+        text: z.string().trim().min(1).max(1000),
+        image,
+        tag: text,
+        cta: text,
+        link: z
+          .string()
+          .trim()
+          .max(2000)
+          .refine(
+            (value) =>
+              /^\/(?!\/)[^\s\\]*$/.test(value) ||
+              /^https:\/\/[^\s]+$/.test(value),
+            "Use a site path such as /classes or an https:// link.",
+          ),
+      }),
+    )
+    .length(3),
+});
+export type Homepage = z.infer<typeof homepageSchema>;
+export const defaultHomepage: Homepage = {
+  eyebrow: "THERE’S A LITTLE SOMETHING FOR EVERYONE",
+  heading: "Find your kind of creative.",
+  subtitle: "Let’s make something lovely.",
+  cards: [
+    {
+      title: "Little artists, big imaginations.",
+      text: "After-school art adventures, one creative week at a time.",
+      image: "/art/kids.webp",
+      link: "/classes?type=children",
+      cta: "Children’s art classes",
+      tag: "MAKE & EXPLORE",
+    },
+    {
+      title: "A night to paint & unwind.",
+      text: "Good company, a little color, drinks, and snacks.",
+      image: "/art/moonlight.webp",
+      link: "/classes?type=adult",
+      cta: "Adult paint nights",
+      tag: "SIP & CREATE",
+    },
+    {
+      title: "Your story, made into art.",
+      text: "Beloved pets, favorite places, and moments worth keeping.",
+      image: "/art/pet-ornaments.webp",
+      link: "/commissions",
+      cta: "Something just for you",
+      tag: "GIVE & KEEP",
+    },
+  ],
+};
 export const settingsSchema = z.object({
   name: text,
   location: text,
@@ -130,6 +188,7 @@ export type Inquiry = Omit<
   createdAt: string;
 };
 export type StudioData = {
+  homepage?: Homepage;
   emailJobs?: import("./notifications").EmailJob[];
   revision: number;
   settings: Settings;
@@ -144,7 +203,7 @@ export type StudioData = {
 };
 export type PublicStudio = Pick<
   StudioData,
-  "settings" | "programs" | "artworks" | "offerings"
+  "settings" | "programs" | "artworks" | "offerings" | "homepage"
 > & {
   events: (StudioEvent & { seatsRemaining: number })[];
   blockedDates: string[];

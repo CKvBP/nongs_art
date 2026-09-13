@@ -39,6 +39,7 @@ import {
   type Settings,
 } from "@/lib/model";
 import { Brand, EmptyState, Modal, postJson, SubmitButton } from "./shared";
+import { HomepageEditor } from "./homepage-editor";
 import { ItemEditor, type AdminData, type EditorState } from "./admin-editor";
 
 export const adminSections = [
@@ -47,6 +48,7 @@ export const adminSections = [
   "programs",
   "registrations",
   "inquiries",
+  "homepage",
   "gallery",
   "offerings",
   "settings",
@@ -56,6 +58,7 @@ const navigation = [
   { id: "registrations", title: "Registrations", icon: Users },
   { id: "overview", title: "Overview", icon: LayoutDashboard },
   { id: "calendar", title: "Classes & Events", icon: CalendarDays },
+  { id: "homepage", title: "Homepage", icon: LayoutDashboard },
   { id: "gallery", title: "Gallery", icon: Images },
   { id: "offerings", title: "Custom offerings", icon: Heart },
   { id: "settings", title: "Studio settings", icon: Settings2 },
@@ -67,6 +70,7 @@ const captions: Record<string, string> = {
   programs: "The creative experiences that make your studio yours.",
   registrations: "A place for every artist. A simple view of every booking.",
   inquiries: "New stories, special requests, and dates to remember.",
+  homepage: "Make your homepage feel like your studio.",
   gallery: "Keep your walls fresh. Share something you’ve made.",
   offerings: "Your one-of-a-kind work, ready to be discovered.",
   settings: "The little details that make it your studio.",
@@ -1058,6 +1062,7 @@ export function AdminStudio({
               ))}
             </div>
           )}
+          {section === "homepage" && <HomepageEditor data={data} save={save} />}
           {section === "settings" && (
             <>
               <StudioSettings

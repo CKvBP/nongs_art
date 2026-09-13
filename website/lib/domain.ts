@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import { queueReceipt } from "./notifications";
 import {
   artworkSchema,
+  homepageSchema,
+  defaultHomepage,
   blockSchema,
   eventSchema,
   inquiryInputSchema,
@@ -32,6 +34,7 @@ export function occupiedSeats(data: StudioData, eventId: string) {
 export function publicStudio(data: StudioData): PublicStudio {
   return {
     settings: data.settings,
+    homepage: data.homepage ?? defaultHomepage,
     programs: data.programs.filter((p) => p.published),
     artworks: data.artworks.filter((a) => a.published),
     offerings: data.offerings.filter((o) => o.published),
@@ -215,6 +218,9 @@ export function adminMutation(data: StudioData, action: string, raw: unknown) {
     }
     case "offering":
       upsert(data.offerings, offeringSchema.parse(raw));
+      break;
+    case "homepage":
+      data.homepage = homepageSchema.parse(raw);
       break;
     case "settings":
       data.settings = settingsSchema.parse(raw);
