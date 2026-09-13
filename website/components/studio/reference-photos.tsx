@@ -1,37 +1,18 @@
 "use client";
 import { useState } from "react";
+import { prepareImage } from "@/lib/browser-images";
 import { ImagePlus, X } from "lucide-react";
 export type PhotoInput = { name: string; data: string };
 async function prepare(file: File): Promise<PhotoInput> {
-  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type))
-    throw new Error(
-      "Please choose JPG, PNG, or WebP photos. Export HEIC photos as JPG first.",
-    );
-  if (file.size > 30_000_000)
-    throw new Error("Choose photos smaller than 30 MB each.");
-  const bitmap = await createImageBitmap(file);
-  try {
-    const canvas = document.createElement("canvas");
-    const scale = Math.min(1, 1800 / Math.max(bitmap.width, bitmap.height));
-    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-    const ctx = canvas.getContext("2d");
-    if (!ctx)
-      throw new Error(
-        "This browser cannot prepare photos. Please try another browser.",
-      );
-    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    for (const quality of [0.9, 0.8, 0.65, 0.5]) {
-      const data = canvas.toDataURL("image/webp", quality);
-      if (data.length <= 1_060_000)
-        return { name: file.name.slice(0, 200), data };
-    }
-    throw new Error(
-      "This photo is too detailed to send. Please choose a smaller copy.",
-    );
-  } finally {
-    bitmap.close();
-  }
+  const blob = await prepareImage(file, 790_000);
+  const data = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () =>
+      reject(new Error("This photo could not be read. Please try again."));
+    reader.readAsDataURL(blob);
+  });
+  return { name: file.name.slice(0, 200), data };
 }
 export function ReferencePhotos({
   photos,
@@ -63,7 +44,7 @@ export function ReferencePhotos({
         </span>
         <input
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
           multiple
           aria-label="Choose reference photos"
           disabled={disabled || working || photos.length >= 3}
@@ -80,7 +61,9 @@ export function ReferencePhotos({
             setWorking(true);
             onBusy(true);
             try {
-              onChange([...photos, ...(await Promise.all(files.map(prepare)))]);
+              const prepared: PhotoInput[] = [];
+              for (const file of files) prepared.push(await prepare(file));
+              onChange([...photos, ...prepared]);
             } catch (error) {
               setError(
                 error instanceof Error

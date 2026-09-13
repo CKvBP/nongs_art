@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { prepareImage, uploadResult } from "@/lib/browser-images";
 import { Plus, Trash2, Upload, LoaderCircle, Check } from "lucide-react";
 import type { StudioData, StudioEvent } from "@/lib/model";
 import { studioNow } from "@/lib/model";
@@ -56,36 +57,18 @@ export function ImageChooser({
     onBusy(true);
     setError("");
     try {
-      if (!["image/jpeg", "image/png", "image/webp"].includes(file.type))
-        throw new Error("Choose a JPG, PNG, or WebP image.");
-      if (file.size > 30_000_000)
-        throw new Error("Choose an image smaller than 30 MB.");
-      const bitmap = await createImageBitmap(file);
-      const scale = Math.min(1, 1800 / Math.max(bitmap.width, bitmap.height));
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.round(bitmap.width * scale);
-      canvas.height = Math.round(bitmap.height * scale);
-      canvas
-        .getContext("2d")!
-        .drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-      bitmap.close();
-      const blob = await new Promise<Blob>((resolve, reject) =>
-        canvas.toBlob(
-          (b) =>
-            b ? resolve(b) : reject(new Error("Could not prepare this image.")),
-          "image/webp",
-          0.85,
-        ),
-      );
+      const blob = await prepareImage(file, 3_500_000);
       const form = new FormData();
-      form.append("image", blob, "artwork.webp");
+      form.append(
+        "image",
+        blob,
+        `artwork.${blob.type === "image/webp" ? "webp" : blob.type === "image/png" ? "png" : "jpg"}`,
+      );
       const response = await fetch("/api/uploads", {
         method: "POST",
         body: form,
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
-      onChange(result.url);
+      onChange(await uploadResult(response));
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -110,7 +93,7 @@ export function ImageChooser({
           <span>JPG, PNG, or WebP · automatically resized</span>
           <input
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
             disabled={busy}
             onChange={(e) => {
               void upload(e.target.files?.[0]);
