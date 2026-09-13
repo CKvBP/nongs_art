@@ -1,13 +1,15 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
+import { deliverAfterResponse, emailReady } from "@/lib/mailer";
 import { z } from "zod";
 import { requireAdmin, checkOrigin } from "@/lib/auth";
 import { adminMutation, StudioError } from "@/lib/domain";
 import { readJson, responseError } from "@/lib/http";
 import { changeStudio, readStudio } from "@/lib/store";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 function adminView(data: Awaited<ReturnType<typeof readStudio>>) {
   const { loginAttempts: _attempts, ...view } = data;
-  return view;
+  return { ...view, emailConfigured: emailReady() };
 }
 export async function GET() {
   try {
@@ -39,6 +41,7 @@ export async function POST(request: Request) {
       adminMutation(data, input.action, input.payload);
       return adminView({ ...data, revision: data.revision + 1 });
     });
+    if (input.action === "retry-email") after(deliverAfterResponse);
     return NextResponse.json(result);
   } catch (error) {
     return responseError(error);

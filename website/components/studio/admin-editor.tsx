@@ -5,7 +5,9 @@ import type { StudioData, StudioEvent } from "@/lib/model";
 import { studioNow } from "@/lib/model";
 import { FormMessage, Modal, SubmitButton } from "./shared";
 
-export type AdminData = Omit<StudioData, "loginAttempts">;
+export type AdminData = Omit<StudioData, "loginAttempts"> & {
+  emailConfigured?: boolean;
+};
 export type EditorKind = "program" | "event" | "artwork" | "offering" | "block";
 export type EditorValue = {
   id?: string;

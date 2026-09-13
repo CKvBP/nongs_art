@@ -184,11 +184,12 @@ export function AdminStudio({
               {item.id === "inquiries" && inquiries.length > 0 && (
                 <span className="nav-count">{inquiries.length}</span>
               )}
-              {item.id === "registrations" && reservedRegistrations.length > 0 && (
-                <span className="nav-count" title="Reserved registrations">
-                  {reservedRegistrations.length}
-                </span>
-              )}
+              {item.id === "registrations" &&
+                reservedRegistrations.length > 0 && (
+                  <span className="nav-count" title="Reserved registrations">
+                    {reservedRegistrations.length}
+                  </span>
+                )}
             </Link>
           ))}
         </nav>
@@ -920,11 +921,92 @@ export function AdminStudio({
             </div>
           )}
           {section === "settings" && (
-            <StudioSettings
-              key={data.revision}
-              settings={data.settings}
-              save={save}
-            />
+            <>
+              <StudioSettings
+                key={data.revision}
+                settings={data.settings}
+                save={save}
+              />
+              <section className="admin-card">
+                <h2>Email delivery</h2>
+                <p>
+                  {data.emailConfigured
+                    ? "Email sending is enabled."
+                    : "Email sending is paused until Gmail is connected in Vercel."}
+                </p>
+                <p>
+                  Confirmations and studio alerts are queued after submissions.
+                  Class reminders go out about 24 hours before each session.
+                  Refresh studio data to see the latest results.
+                </p>
+                {(data.emailJobs?.length ?? 0) > 0 ? (
+                  <div className="table-scroll">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Message</th>
+                          <th>Reference</th>
+                          <th>Status</th>
+                          <th>Attempts</th>
+                          <th />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[...(data.emailJobs ?? [])]
+                          .reverse()
+                          .slice(0, 30)
+                          .map((job) => (
+                            <tr key={job.id}>
+                              <td>
+                                {job.kind.replaceAll("-", " ")}
+                                {job.session && (
+                                  <small>
+                                    {job.session.replace("T", " ")} ET
+                                  </small>
+                                )}
+                              </td>
+                              <td>
+                                {[
+                                  ...data.registrations,
+                                  ...data.inquiries,
+                                ].find((item) => item.id === job.entityId)
+                                  ?.reference ?? "Removed record"}
+                              </td>
+                              <td>
+                                {job.state === "sent"
+                                  ? "Accepted by Gmail"
+                                  : job.state}
+                                {job.error && <small>{job.error}</small>}
+                              </td>
+                              <td>{job.attempts}</td>
+                              <td>
+                                {job.state === "failed" && (
+                                  <button
+                                    className="button small"
+                                    onClick={() =>
+                                      void save("retry-email", { id: job.id })
+                                    }
+                                  >
+                                    Retry email
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p>No emails have been queued yet.</p>
+                )}
+                <p className="form-hint">
+                  Gmail acceptance does not guarantee inbox delivery. An
+                  interrupted send can occasionally be retried twice; check
+                  Gmail’s Sent folder before manually retrying an uncertain
+                  delivery.
+                </p>
+              </section>
+            </>
           )}
           <footer className="admin-footer">
             <span>Made with a little color & a lot of heart.</span>

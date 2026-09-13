@@ -128,6 +128,7 @@ export type Inquiry = Omit<
   createdAt: string;
 };
 export type StudioData = {
+  emailJobs?: import("./notifications").EmailJob[];
   revision: number;
   settings: Settings;
   programs: Program[];
@@ -164,7 +165,7 @@ export function timeLabel(time: string) {
   const [h, m] = time.split(":").map(Number);
   return `${h % 12 || 12}${m ? ":" + String(m).padStart(2, "0") : ""} ${h >= 12 ? "PM" : "AM"}`;
 }
-export function studioNow() {
+export function studioNow(now = new Date()) {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/New_York",
     year: "numeric",
@@ -173,7 +174,7 @@ export function studioNow() {
     hour: "2-digit",
     minute: "2-digit",
     hourCycle: "h23",
-  }).formatToParts(new Date());
+  }).formatToParts(now);
   const part = (key: string) => parts.find((p) => p.type === key)?.value;
   return `${part("year")}-${part("month")}-${part("day")}T${part("hour")}:${part("minute")}`;
 }

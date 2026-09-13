@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
+import { deliverAfterResponse } from "@/lib/mailer";
 import { checkOrigin } from "@/lib/auth";
 import { requestArt, StudioError } from "@/lib/domain";
 import { readJson, responseError } from "@/lib/http";
@@ -12,6 +13,7 @@ import {
 } from "@/lib/reference-photos";
 import { changeStudio, readStudio } from "@/lib/store";
 export const runtime = "nodejs";
+export const maxDuration = 60;
 export async function POST(request: Request) {
   const saved: ReferencePhoto[] = [];
   let committed = false;
@@ -68,6 +70,7 @@ export async function POST(request: Request) {
       return { response, attached: !exists };
     });
     committed = response.attached;
+    after(deliverAfterResponse);
     return NextResponse.json(response.response, { status: 201 });
   } catch (error) {
     return responseError(error);

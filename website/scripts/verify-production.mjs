@@ -27,6 +27,8 @@ const server = spawn(
       ...process.env,
       NODE_ENV: "production",
       VERCEL: "",
+      EMAIL_ENABLED: "false",
+      GMAIL_APP_PASSWORD: "",
       DATABASE_URL: "",
       BLOB_READ_WRITE_TOKEN: "",
       REFERENCE_BLOB_READ_WRITE_TOKEN: "",

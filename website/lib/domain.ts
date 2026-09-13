@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { queueReceipt } from "./notifications";
 import {
   artworkSchema,
   blockSchema,
@@ -120,6 +121,7 @@ export function reserveClass(data: StudioData, raw: unknown) {
     status: "reserved",
     createdAt: new Date().toISOString(),
   });
+  queueReceipt(data, requestId, "booking");
   return { reference };
 }
 export function requestArt(data: StudioData, raw: unknown) {
@@ -169,6 +171,7 @@ export function requestArt(data: StudioData, raw: unknown) {
     status: "new",
     createdAt: new Date().toISOString(),
   });
+  queueReceipt(data, requestId, "inquiry");
   return { reference };
 }
 function upsert<T extends { id: string }>(items: T[], value: T) {
@@ -178,6 +181,18 @@ function upsert<T extends { id: string }>(items: T[], value: T) {
 }
 export function adminMutation(data: StudioData, action: string, raw: unknown) {
   switch (action) {
+    case "retry-email": {
+      const job = data.emailJobs?.find(
+        (j) => j.id === (raw as { id?: string })?.id,
+      );
+      if (!job || job.state !== "failed")
+        throw new StudioError("Only failed emails can be retried.");
+      job.state = "pending";
+      job.attempts = 0;
+      job.nextAttemptAt = Date.now();
+      delete job.error;
+      break;
+    }
     case "program":
       upsert(data.programs, programSchema.parse(raw));
       break;

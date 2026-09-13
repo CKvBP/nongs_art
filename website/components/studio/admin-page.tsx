@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { isAdmin, localPreview } from "@/lib/auth";
 import { readStudio } from "@/lib/store";
+import { emailReady } from "@/lib/mailer";
 import { AdminStudio } from "./admin";
 export async function AdminPage({
   section = "overview",
@@ -12,7 +13,7 @@ export async function AdminPage({
   return (
     <AdminStudio
       key={section}
-      initial={initial}
+      initial={{ ...initial, emailConfigured: emailReady() }}
       section={section}
       preview={localPreview()}
     />
