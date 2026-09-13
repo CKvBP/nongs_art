@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { createSeed } from "../lib/seed";
 import {
   adminMutation,
+  applyAdminEdit,
   occupiedSeats,
   publicStudio,
   requestArt,
@@ -321,4 +322,41 @@ test("homepage edits publish without changing offerings and reject unsafe links"
     publicStudio(data).homepage!.cards[0].link,
     original.cards[0].link,
   );
+});
+
+test("background writes do not invalidate sequential admin edits, but competing admin edits do", () => {
+  const data = studio();
+  applyAdminEdit(
+    data,
+    "program",
+    { ...data.programs[0], title: "First edit" },
+    0,
+  );
+  const revision = data.adminRevision!;
+  data.revision += 10; // Email claims/completions and other background transactions.
+  reserveClass(data, booking());
+  applyAdminEdit(
+    data,
+    "program",
+    { ...data.programs[1], title: "Second edit" },
+    revision,
+  );
+  assert.equal(data.programs[1].title, "Second edit");
+  assert.throws(
+    () =>
+      applyAdminEdit(
+        data,
+        "program",
+        { ...data.programs[1], title: "Stale edit" },
+        revision,
+      ),
+    /Another administrator/,
+  );
+  assert.equal(data.programs[1].title, "Second edit");
+  const current = data.adminRevision;
+  assert.throws(
+    () => applyAdminEdit(data, "program", { id: "invalid" }, current!),
+    /./,
+  );
+  assert.equal(data.adminRevision, current);
 });

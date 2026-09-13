@@ -188,6 +188,7 @@ export type Inquiry = Omit<
   createdAt: string;
 };
 export type StudioData = {
+  adminRevision?: number;
   homepage?: Homepage;
   emailJobs?: import("./notifications").EmailJob[];
   revision: number;

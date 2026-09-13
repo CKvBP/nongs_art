@@ -145,6 +145,7 @@ export function AdminStudio({
         action,
         payload,
         revision: data.revision,
+        adminRevision: data.adminRevision ?? 0,
       });
       setData(updated);
       setNotice(

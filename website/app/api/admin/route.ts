@@ -2,7 +2,7 @@ import { after, NextResponse } from "next/server";
 import { deliverAfterResponse, emailReady } from "@/lib/mailer";
 import { z } from "zod";
 import { requireAdmin, checkOrigin } from "@/lib/auth";
-import { adminMutation, StudioError } from "@/lib/domain";
+import { applyAdminEdit, StudioError } from "@/lib/domain";
 import { readJson, responseError } from "@/lib/http";
 import { changeStudio, readStudio } from "@/lib/store";
 export const dynamic = "force-dynamic";
@@ -30,15 +30,22 @@ export async function POST(request: Request) {
         action: z.string().max(50),
         payload: z.unknown(),
         revision: z.number().int(),
+        adminRevision: z.number().int().nonnegative().optional(),
       })
       .parse(await readJson(request));
     const result = await changeStudio((data) => {
-      if (data.revision !== input.revision)
+      // Older tabs retain their existing whole-store conflict protection.
+      if (input.adminRevision === undefined && data.revision !== input.revision)
         throw new StudioError(
-          "The studio changed in another window. Refresh and try again.",
+          "The studio changed. Refresh the page to load the latest editor.",
           409,
         );
-      adminMutation(data, input.action, input.payload);
+      applyAdminEdit(
+        data,
+        input.action,
+        input.payload,
+        input.adminRevision ?? data.adminRevision ?? 0,
+      );
       return adminView({ ...data, revision: data.revision + 1 });
     });
     if (input.action === "retry-email") after(deliverAfterResponse);

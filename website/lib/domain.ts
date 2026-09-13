@@ -344,3 +344,19 @@ export function adminMutation(data: StudioData, action: string, raw: unknown) {
       throw new StudioError("Unknown action.");
   }
 }
+
+/** Only admin edits invalidate another admin's form, not mail jobs or bookings. */
+export function applyAdminEdit(
+  data: StudioData,
+  action: string,
+  payload: unknown,
+  expectedRevision: number,
+) {
+  if ((data.adminRevision ?? 0) !== expectedRevision)
+    throw new StudioError(
+      "Another administrator saved changes. Refresh studio data and review your changes before saving again.",
+      409,
+    );
+  adminMutation(data, action, payload);
+  data.adminRevision = (data.adminRevision ?? 0) + 1;
+}
