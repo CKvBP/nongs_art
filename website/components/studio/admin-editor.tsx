@@ -206,6 +206,20 @@ export function ItemEditor({
   }
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (busy || uploading) return;
+    const submitter = (event.nativeEvent as SubmitEvent).submitter;
+    const publishClass =
+      submitter instanceof HTMLButtonElement && submitter.value === "publish";
+    if (
+      kind === "event" &&
+      publishClass &&
+      !data.programs.find((p) => p.id === programId)?.published
+    ) {
+      setFormError(
+        "Publish this class’s program in Programs & defaults first, then publish the class.",
+      );
+      return;
+    }
     setBusy(true);
     setFormError("");
     const form = new FormData(event.currentTarget);
@@ -238,7 +252,7 @@ export function ItemEditor({
           start: value(`session-start-${i}`),
           end: value(`session-end-${i}`),
         })),
-        published: form.has("published"),
+        published: publishClass,
       };
     if (kind === "artwork")
       payload = {
@@ -613,12 +627,12 @@ export function ItemEditor({
             />
           </>
         )}
-        {kind !== "block" && (
+        {kind !== "block" && kind !== "event" && (
           <label className="checkbox-label">
             <input
               type="checkbox"
               name="published"
-              defaultChecked={item.published ?? kind !== "event"}
+              defaultChecked={item.published ?? true}
             />
             <span>Visible on the website</span>
           </label>
@@ -653,6 +667,15 @@ export function ItemEditor({
           </label>
         )}
         <FormMessage error={error || formError} />
+        {kind === "event" && (
+          <p className="form-hint">
+            Save draft keeps this class off the website. Publish makes it
+            visible to customers.
+            {item.published
+              ? " Saving this published class as a draft will hide it; existing registrations are kept."
+              : ""}
+          </p>
+        )}
         <div className="dialog-actions">
           <button
             type="button"
@@ -662,9 +685,37 @@ export function ItemEditor({
           >
             Cancel
           </button>
-          <SubmitButton busy={busy || uploading}>
-            Save {labels[kind]} <Check size={16} />
-          </SubmitButton>
+          {kind === "event" ? (
+            <>
+              <button
+                className="button"
+                type="submit"
+                name="intent"
+                value="draft"
+                disabled={busy || uploading}
+              >
+                Save draft
+              </button>
+              <button
+                className="button dark"
+                type="submit"
+                name="intent"
+                value="publish"
+                disabled={busy || uploading}
+              >
+                {busy
+                  ? "Saving…"
+                  : item.published
+                    ? "Publish changes"
+                    : "Publish"}{" "}
+                <Check size={16} />
+              </button>
+            </>
+          ) : (
+            <SubmitButton busy={busy || uploading}>
+              Save {labels[kind]} <Check size={16} />
+            </SubmitButton>
+          )}
         </div>
       </form>
     </Modal>
