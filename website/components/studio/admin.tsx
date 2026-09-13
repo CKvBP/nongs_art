@@ -496,7 +496,8 @@ export function AdminStudio({
           )}
           {isClasses && (
             <div
-              className="table-toolbar"
+              className="class-view-switcher"
+              role="group"
               aria-label="Classes and events views"
             >
               {[
@@ -507,7 +508,7 @@ export function AdminStudio({
                 <button
                   key={id}
                   type="button"
-                  className={`button small ${classView === id ? "dark" : ""}`}
+                  className={classView === id ? "active" : ""}
                   aria-pressed={classView === id}
                   onClick={() => setClassView(id)}
                 >

@@ -3701,3 +3701,39 @@ td .text-link {
   margin: 20px 0;
   max-width: 520px;
 }
+
+/* Keep class views grouped independently of table search controls. */
+.class-view-switcher {
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  gap: 4px;
+  padding: 5px;
+  margin: 0 0 24px;
+  border: 1px solid #dce3d3;
+  border-radius: 12px;
+  background: #edf1e7;
+}
+.class-view-switcher button {
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 18px;
+  min-height: 44px;
+  background: transparent;
+  color: #52604a;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.class-view-switcher button:hover { background: #e3e9da; }
+.class-view-switcher button.active {
+  background: #fff;
+  color: #293c25;
+  box-shadow: 0 1px 4px #263b201a;
+}
+.class-view-switcher button:focus-visible { outline: 2px solid #526b43; outline-offset: 2px; }
+@media (max-width: 600px) {
+  .class-view-switcher { width: 100%; gap: 2px; padding: 4px; margin-bottom: 20px; }
+  .class-view-switcher button { flex: 1; min-width: 0; padding: 10px 6px; font-size: 12px; line-height: 1.35; }
+}
