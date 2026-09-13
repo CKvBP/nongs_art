@@ -96,6 +96,7 @@ export function AdminStudio({
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleting, setDeleting] = useState<{
     kind: string;
     id: string;
@@ -762,6 +763,20 @@ export function AdminStudio({
                             >
                               Details <ArrowUpRight size={15} />
                             </button>
+                            <button
+                              className="icon-button"
+                              aria-label={`Delete registration ${r.reference}`}
+                              onClick={() => {
+                                setError("");
+                                setDeleting({
+                                  kind: "registration",
+                                  id: r.id,
+                                  title: `${r.customerName} · ${r.reference}`,
+                                });
+                              }}
+                            >
+                              <Trash2 size={16} />
+                            </button>
                           </td>
                         </tr>
                       ))}
@@ -1157,25 +1172,61 @@ export function AdminStudio({
       )}{" "}
       {deleting && (
         <Modal
-          title="Remove from the studio?"
+          title={
+            deleting.kind === "registration"
+              ? "Delete registration?"
+              : "Remove from the studio?"
+          }
           onClose={() => setDeleting(null)}
         >
           <div className="delete-dialog">
+            {error && (
+              <p className="form-error" role="alert">
+                {error}
+              </p>
+            )}
             <p>
-              Remove <strong>{deleting.title}</strong>? Items with booking
-              history must be kept; you can hide those from the website instead.
+              {deleting.kind === "registration" ? (
+                <>
+                  Permanently delete <strong>{deleting.title}</strong>? This
+                  removes the customer and participant details, releases their
+                  places, and removes queued emails and reminders. It cannot be
+                  undone. Emails already sent cannot be recalled. No
+                  cancellation email will be sent.
+                </>
+              ) : (
+                <>
+                  Remove <strong>{deleting.title}</strong>? Items with booking
+                  history must be kept; you can hide those from the website
+                  instead.
+                </>
+              )}
             </p>
             <div className="dialog-actions">
-              <button className="button" onClick={() => setDeleting(null)}>
+              <button
+                className="button"
+                disabled={deleteBusy}
+                onClick={() => setDeleting(null)}
+              >
                 Keep it
               </button>
               <button
                 className="button danger"
+                disabled={deleteBusy}
                 onClick={async () => {
-                  if (await save("delete", deleting)) setDeleting(null);
+                  setDeleteBusy(true);
+                  try {
+                    if (await save("delete", deleting)) setDeleting(null);
+                  } finally {
+                    setDeleteBusy(false);
+                  }
                 }}
               >
-                Remove
+                {deleteBusy
+                  ? "Removing…"
+                  : deleting.kind === "registration"
+                    ? "Delete registration"
+                    : "Remove"}
               </button>
             </div>
           </div>
@@ -1229,6 +1280,20 @@ export function AdminStudio({
               Cancelling releases the reserved places. No email is sent
               automatically.
             </p>
+            <button
+              className="button danger"
+              onClick={() => {
+                setError("");
+                setDeleting({
+                  kind: "registration",
+                  id: registration.id,
+                  title: `${registration.customerName} · ${registration.reference}`,
+                });
+                setRegistration(null);
+              }}
+            >
+              Delete registration
+            </button>
           </div>
         </Modal>
       )}

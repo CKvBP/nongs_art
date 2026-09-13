@@ -263,3 +263,41 @@ test("weekly painting details persist independently of program defaults and draf
     false,
   );
 });
+
+test("deleting junk registrations releases seats and removes their email jobs only", () => {
+  const data = studio();
+  reserveClass(data, booking("kids-mw-0", 2));
+  reserveClass(data, booking("kids-mw-0", 1));
+  const junk = data.registrations[0];
+  const real = data.registrations[1];
+  assert.equal(occupiedSeats(data, junk.eventId), 3);
+  adminMutation(data, "delete", { kind: "registration", id: junk.id });
+  assert.equal(occupiedSeats(data, real.eventId), 1);
+  assert.deepEqual(
+    data.registrations.map((r) => r.id),
+    [real.id],
+  );
+  assert.ok(data.emailJobs!.every((job) => job.entityId !== junk.id));
+  assert.ok(data.emailJobs!.some((job) => job.entityId === real.id));
+  assert.throws(
+    () => adminMutation(data, "delete", { kind: "registration", id: junk.id }),
+    /not found/,
+  );
+});
+
+test("registration deletion waits for an active email send", () => {
+  const data = studio();
+  reserveClass(data, booking());
+  const job = data.emailJobs![0];
+  job.state = "sending";
+  job.leaseUntil = Date.now() + 60_000;
+  const id = data.registrations[0].id;
+  assert.throws(
+    () => adminMutation(data, "delete", { kind: "registration", id }),
+    /being sent/,
+  );
+  assert.equal(data.registrations.length, 1);
+  job.state = "sent";
+  adminMutation(data, "delete", { kind: "registration", id });
+  assert.equal(data.registrations.length, 0);
+});

@@ -287,7 +287,25 @@ export function adminMutation(data: StudioData, action: string, raw: unknown) {
     }
     case "delete": {
       const { kind, id } = raw as { kind: string; id: string };
-      if (kind === "program") {
+      if (kind === "registration") {
+        if (!data.registrations.some((r) => r.id === id))
+          throw new StudioError(
+            "Registration not found. Refresh the studio and try again.",
+          );
+        if (
+          data.emailJobs?.some(
+            (job) =>
+              job.entityId === id &&
+              job.state === "sending" &&
+              (job.leaseUntil ?? 0) > Date.now(),
+          )
+        )
+          throw new StudioError(
+            "An email for this registration is being sent. Please try deleting it again in a few minutes.",
+          );
+        data.registrations = data.registrations.filter((r) => r.id !== id);
+        data.emailJobs = data.emailJobs?.filter((job) => job.entityId !== id);
+      } else if (kind === "program") {
         if (data.events.some((e) => e.programId === id))
           throw new StudioError(
             "This program has scheduled classes. Hide it instead, or remove its classes first.",
