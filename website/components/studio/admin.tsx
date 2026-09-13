@@ -53,10 +53,10 @@ export const adminSections = [
 ];
 const navigation = [
   { id: "inquiries", title: "Inquiries", icon: MessageSquare },
+  { id: "registrations", title: "Registrations", icon: Users },
   { id: "overview", title: "Overview", icon: LayoutDashboard },
   { id: "calendar", title: "Calendar", icon: CalendarDays },
   { id: "programs", title: "Programs", icon: Palette },
-  { id: "registrations", title: "Registrations", icon: Users },
   { id: "gallery", title: "Gallery", icon: Images },
   { id: "offerings", title: "Custom offerings", icon: Heart },
   { id: "settings", title: "Studio settings", icon: Settings2 },
@@ -108,6 +108,9 @@ export function AdminStudio({
       sortedSessions(a)[0].date.localeCompare(sortedSessions(b)[0].date),
     );
   const inquiries = data.inquiries.filter((i) => i.status === "new");
+  const reservedRegistrations = data.registrations.filter(
+    (r) => r.status === "reserved",
+  );
   async function refresh() {
     setLoading(true);
     setError("");
@@ -180,6 +183,11 @@ export function AdminStudio({
               {item.title}
               {item.id === "inquiries" && inquiries.length > 0 && (
                 <span className="nav-count">{inquiries.length}</span>
+              )}
+              {item.id === "registrations" && reservedRegistrations.length > 0 && (
+                <span className="nav-count" title="Reserved registrations">
+                  {reservedRegistrations.length}
+                </span>
               )}
             </Link>
           ))}
