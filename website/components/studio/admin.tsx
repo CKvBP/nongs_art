@@ -52,11 +52,11 @@ export const adminSections = [
   "settings",
 ];
 const navigation = [
+  { id: "inquiries", title: "Inquiries", icon: MessageSquare },
   { id: "overview", title: "Overview", icon: LayoutDashboard },
   { id: "calendar", title: "Calendar", icon: CalendarDays },
   { id: "programs", title: "Programs", icon: Palette },
   { id: "registrations", title: "Registrations", icon: Users },
-  { id: "inquiries", title: "Inquiries", icon: MessageSquare },
   { id: "gallery", title: "Gallery", icon: Images },
   { id: "offerings", title: "Custom offerings", icon: Heart },
   { id: "settings", title: "Studio settings", icon: Settings2 },
