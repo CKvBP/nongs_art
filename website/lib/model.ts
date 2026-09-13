@@ -61,7 +61,7 @@ export const artworkSchema = z.object({
 export const offeringSchema = z.object({
   id,
   title: text,
-  category: z.enum(["ornament", "wedding", "scribble", "acrylic"]),
+  category: z.enum(["ornament", "wedding", "scribble", "acrylic", "art-class"]),
   description: z.string().trim().min(1).max(3000),
   image,
   startingPrice: money,

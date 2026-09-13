@@ -469,6 +469,7 @@ export function ItemEditor({
                         ["wedding", "Wedding painting"],
                         ["scribble", "Scribbles & sketches"],
                         ["acrylic", "Acrylic painting"],
+                        ["art-class", "Art Classes"],
                       ]
                 ).map(([v, label]) => (
                   <option key={v} value={v}>

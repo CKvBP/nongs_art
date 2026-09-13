@@ -27,6 +27,7 @@ const categoryLabels = {
   wedding: "WEDDING PAINTINGS",
   scribble: "SCRIBBLES & SKETCHES",
   acrylic: "ACRYLIC PAINTINGS",
+  "art-class": "ART CLASSES",
 };
 export function Commissions() {
   const { data } = useStudio();
