@@ -29,13 +29,20 @@ function database() {
 async function initialize() {
   const sql = database();
   if (!sql) return;
-  globals.studioReady ??= (async () => {
-    await sql`CREATE TABLE IF NOT EXISTS studio_state (id integer PRIMARY KEY CHECK (id = 1), data jsonb NOT NULL)`;
-    await sql`INSERT INTO studio_state (id, data) VALUES (1, ${JSON.stringify(createSeed())}::jsonb) ON CONFLICT (id) DO NOTHING`;
-  })().catch((error) => {
-    globals.studioReady = undefined;
-    throw error;
-  });
+  globals.studioReady ??= sql
+    .begin(async (tx) => {
+      // Multiple cold starts can initialize at once; serialize catalog changes.
+      await tx`SELECT pg_advisory_xact_lock(781204619)`;
+      await tx`CREATE TABLE IF NOT EXISTS studio_state (id integer PRIMARY KEY CHECK (id = 1), data jsonb NOT NULL)`;
+      await tx`INSERT INTO studio_state (id, data) VALUES (1, ${tx.json(createSeed())}) ON CONFLICT (id) DO NOTHING`;
+      // Repair the earlier adapter's JSON-string encoding without losing records.
+      await tx`UPDATE studio_state SET data = (data #>> '{}')::jsonb WHERE id = 1 AND jsonb_typeof(data) = 'string'`;
+    })
+    .then(() => {})
+    .catch((error) => {
+      globals.studioReady = undefined;
+      throw error;
+    });
   await globals.studioReady;
 }
 async function readLocal(): Promise<StudioData> {
@@ -84,7 +91,7 @@ export async function changeStudio<T>(fn: (data: StudioData) => T): Promise<T> {
     const data = rows[0].data as StudioData;
     const result = fn(data);
     data.revision++;
-    await tx`UPDATE studio_state SET data = ${JSON.stringify(data)}::jsonb WHERE id = 1`;
+    await tx`UPDATE studio_state SET data = ${tx.json(data)} WHERE id = 1`;
     return result;
   })) as T;
 }
