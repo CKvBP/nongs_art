@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { OfferingGalleryEditor } from "./offering-gallery-editor";
 import { prepareImage, uploadResult } from "@/lib/browser-images";
 import { Plus, Trash2, Upload, LoaderCircle, Check } from "lucide-react";
 import type { StudioData, StudioEvent } from "@/lib/model";
@@ -11,6 +12,7 @@ export type AdminData = Omit<StudioData, "loginAttempts"> & {
 };
 export type EditorKind = "program" | "event" | "artwork" | "offering" | "block";
 export type EditorValue = {
+  samples?: { image: string; caption: string }[];
   id?: string;
   title?: string;
   description?: string;
@@ -157,6 +159,8 @@ export function ItemEditor({
   const { kind, item = {} } = editor;
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [sampleUploading, setSampleUploading] = useState(false);
+  const [samples, setSamples] = useState(item.samples ?? []);
   const [image, setImage] = useState(
     item.image ??
       (kind === "event"
@@ -206,7 +210,7 @@ export function ItemEditor({
   }
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy || uploading) return;
+    if (busy || uploading || sampleUploading) return;
     const submitter = (event.nativeEvent as SubmitEvent).submitter;
     const publishClass =
       submitter instanceof HTMLButtonElement && submitter.value === "publish";
@@ -272,6 +276,7 @@ export function ItemEditor({
         category: value("category"),
         description: value("description"),
         image,
+        samples,
         startingPrice: Number(value("startingPrice")),
         published: form.has("published"),
       };
@@ -322,7 +327,7 @@ export function ItemEditor({
             <button
               type="button"
               className="text-link"
-              disabled={busy || uploading}
+              disabled={busy || uploading || sampleUploading}
               onClick={() =>
                 onCreateProgram({
                   ...item,
@@ -627,6 +632,14 @@ export function ItemEditor({
             />
           </>
         )}
+        {kind === "offering" && (
+          <OfferingGalleryEditor
+            samples={samples}
+            onChange={setSamples}
+            data={data}
+            onBusy={setSampleUploading}
+          />
+        )}
         {kind !== "block" && kind !== "event" && (
           <label className="checkbox-label">
             <input
@@ -692,7 +705,7 @@ export function ItemEditor({
                 type="submit"
                 name="intent"
                 value="draft"
-                disabled={busy || uploading}
+                disabled={busy || uploading || sampleUploading}
               >
                 Save draft
               </button>
@@ -701,7 +714,7 @@ export function ItemEditor({
                 type="submit"
                 name="intent"
                 value="publish"
-                disabled={busy || uploading}
+                disabled={busy || uploading || sampleUploading}
               >
                 {busy
                   ? "Saving…"
@@ -712,7 +725,7 @@ export function ItemEditor({
               </button>
             </>
           ) : (
-            <SubmitButton busy={busy || uploading}>
+            <SubmitButton busy={busy || uploading || sampleUploading}>
               Save {labels[kind]} <Check size={16} />
             </SubmitButton>
           )}

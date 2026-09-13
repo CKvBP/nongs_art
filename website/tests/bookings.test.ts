@@ -360,3 +360,41 @@ test("background writes do not invalidate sequential admin edits, but competing 
   );
   assert.equal(data.adminRevision, current);
 });
+
+test("offering sample galleries persist in order, stay private on hidden offerings, and validate images", () => {
+  const data = studio();
+  const offering = {
+    ...data.offerings[0],
+    samples: [
+      { image: "/art/floral.webp", caption: "Flowers" },
+      { image: "/art/kids.webp", caption: "Color study" },
+    ],
+  };
+  adminMutation(data, "offering", offering);
+  assert.deepEqual(
+    publicStudio(data).offerings.find((o) => o.id === offering.id)?.samples,
+    offering.samples,
+  );
+  adminMutation(data, "offering", {
+    ...offering,
+    samples: [offering.samples[1]],
+  });
+  assert.equal(data.offerings[0].samples?.length, 1);
+  assert.throws(() =>
+    adminMutation(data, "offering", {
+      ...offering,
+      samples: Array(13).fill(offering.samples[0]),
+    }),
+  );
+  assert.throws(() =>
+    adminMutation(data, "offering", {
+      ...offering,
+      samples: [{ image: "javascript:alert(1)", caption: "" }],
+    }),
+  );
+  adminMutation(data, "offering", { ...offering, published: false });
+  assert.equal(
+    publicStudio(data).offerings.some((o) => o.id === offering.id),
+    false,
+  );
+});

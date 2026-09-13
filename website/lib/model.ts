@@ -60,7 +60,12 @@ export const artworkSchema = z.object({
   hero: z.enum(["none", "main", "accent"]).optional(),
   published: z.boolean(),
 });
+export const offeringSampleSchema = z.object({
+  image,
+  caption: z.string().trim().max(300),
+});
 export const offeringSchema = z.object({
+  samples: z.array(offeringSampleSchema).max(12).optional(),
   id,
   title: text,
   category: z.enum(["ornament", "wedding", "scribble", "acrylic", "art-class"]),

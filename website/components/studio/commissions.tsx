@@ -299,6 +299,35 @@ export function CommissionDetails({
               </span>
             )}
           </div>
+          {!!offering.samples?.length && (
+            <section className="offering-samples" aria-label="Sample artwork">
+              <h2>A few things I’ve made</h2>
+              <div className="offering-sample-grid">
+                {offering.samples.map((sample, index) => (
+                  <figure key={index}>
+                    <a
+                      href={sample.image}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`View larger: ${sample.caption || `${offering.title} sample ${index + 1}`}`}
+                    >
+                      <img
+                        src={sample.image}
+                        alt={
+                          sample.caption ||
+                          `${offering.title} sample ${index + 1}`
+                        }
+                        loading="lazy"
+                      />
+                    </a>
+                    {sample.caption && (
+                      <figcaption>{sample.caption}</figcaption>
+                    )}
+                  </figure>
+                ))}
+              </div>
+            </section>
+          )}
           <div className="personal-note">
             <Heart size={21} />
             <p>
