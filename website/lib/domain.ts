@@ -219,8 +219,12 @@ export function adminMutation(data: StudioData, action: string, raw: unknown) {
     case "offering":
       upsert(data.offerings, offeringSchema.parse(raw));
       break;
+    case "homepage-draft":
+      data.homepageDraft = homepageSchema.parse(raw);
+      break;
     case "homepage":
       data.homepage = homepageSchema.parse(raw);
+      delete data.homepageDraft;
       break;
     case "settings":
       data.settings = settingsSchema.parse(raw);

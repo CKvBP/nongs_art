@@ -74,7 +74,37 @@ export const offeringSchema = z.object({
   startingPrice: money,
   published: z.boolean(),
 });
+export const homepageCopyDefaults = {
+  heroEyebrow: "ART FOR THE EVERYDAY & THE EXTRAORDINARY",
+  heroHeading: "A little color.\nA lot of joy.",
+  heroIntro:
+    "A welcoming space to get creative. A hand-painted piece to hold close. Come find a little art that feels like you.",
+  heroPrimary: "Make something with me",
+  heroSecondary: "Explore my work",
+  heroNote: "Made by hand. Always from the heart.",
+  heroCaption: "FROM NONG’S EASEL, WITH LOVE",
+  accentCaption: "Little lines, big personality.",
+  heroSeal: "a little\nhandmade\nhappiness",
+  galleryEyebrow: "A FEW THINGS FROM MY WORLD",
+  galleryHeading: "From the studio.",
+  galleryLink: "Visit the gallery",
+  upcomingEyebrow: "COMING UP IN THE STUDIO",
+  upcomingHeading: "What we’re painting next",
+  aboutCaption: "From my studio to your home.",
+  aboutEyebrow: "THE ARTIST BEHIND THE EASEL",
+  aboutHeading: "Hi, I’m Nong.\nLet’s bring a little more art into your life.",
+  aboutLink: "Let’s create something together",
+};
 export const homepageSchema = z.object({
+  featuredArtworkIds: z.array(id).max(4).optional(),
+  copy: z.record(z.string().trim().min(1).max(5000)).optional(),
+  heroMain: image.optional(),
+  heroAccent: image.optional(),
+  aboutImage: image.optional(),
+  heroMainAlt: text.optional(),
+  heroAccentAlt: text.optional(),
+  aboutImageAlt: text.optional(),
+  aboutBio: z.string().trim().min(1).max(5000).optional(),
   eyebrow: text,
   heading: text,
   subtitle: text,
@@ -195,6 +225,7 @@ export type Inquiry = Omit<
 export type StudioData = {
   adminRevision?: number;
   homepage?: Homepage;
+  homepageDraft?: Homepage;
   emailJobs?: import("./notifications").EmailJob[];
   revision: number;
   settings: Settings;

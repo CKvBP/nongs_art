@@ -398,3 +398,22 @@ test("offering sample galleries persist in order, stay private on hidden offerin
     false,
   );
 });
+
+test("homepage visual drafts stay private until published and preserve image selections", () => {
+  const data = studio();
+  const before = structuredClone(publicStudio(data).homepage);
+  const draft = {
+    ...before!,
+    heroMain: "/art/kids.webp",
+    copy: { heroHeading: "Draft only" },
+    featuredArtworkIds: [data.artworks[0].id],
+  };
+  adminMutation(data, "homepage-draft", draft);
+  assert.deepEqual(publicStudio(data).homepage, before);
+  assert.equal("homepageDraft" in publicStudio(data), false);
+  assert.equal(data.homepageDraft?.heroMain, "/art/kids.webp");
+  adminMutation(data, "homepage", draft);
+  assert.equal(data.homepageDraft, undefined);
+  assert.equal(publicStudio(data).homepage?.copy?.heroHeading, "Draft only");
+  assert.equal(publicStudio(data).homepage?.heroMain, "/art/kids.webp");
+});

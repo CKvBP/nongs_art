@@ -3747,3 +3747,15 @@ td .text-link {
 .offering-sample-editor { min-width: 0; }
 .sample-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
 @media (max-width: 480px) { .offering-sample-editor .offering-sample-grid { grid-template-columns: 1fr; } }
+
+.visual-home-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:10px; position:sticky; top:0; z-index:20; padding:14px; background:#f7f8f2; border:1px solid #dce3d3; border-radius:10px; }
+.visual-home-toolbar > div { display:flex; gap:4px; margin-right:auto; }
+.home-canvas-scroll { overflow:auto; max-width:100%; margin-top:20px; border:1px solid #dce3d3; background:#e8ecdf; padding:12px; border-radius:12px; }
+.home-canvas { display:block; height:1000px; border:0; background:#fafbf5; margin:auto; }
+.home-editable { cursor:text; outline:1px dashed #68805280; outline-offset:4px; border-radius:2px; }
+.home-editable:hover,.home-editable:focus-visible { outline:2px solid #55713e; background:#dcebc455; }
+.home-image-edit,.home-link-edit { position:relative; z-index:5; font:600 12px sans-serif; background:#fff; color:#293c25; border:1px solid #536d3f; border-radius:7px; padding:10px 14px; cursor:pointer; }
+.hero-art > .home-image-edit { margin:8px; }
+.card-image .home-image-edit { position:absolute; top:12px; right:12px; }
+.about-image .home-image-edit { position:absolute; top:16px; left:16px; }
+.home-link-edit { margin-top:14px; }
